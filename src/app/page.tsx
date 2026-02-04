@@ -1,65 +1,159 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useCallback, useEffect } from "react";
+import { Sparkles, Heart, BookMarked } from "lucide-react";
+import { quotes, type Quote } from "@/data/quotes";
+import { QuoteCard } from "@/components/QuoteCard";
+import { FavoritesList } from "@/components/FavoritesList";
+import { Toast } from "@/components/Toast";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+
+type Tab = "discover" | "favorites";
+
+function getRandomQuote(excludeId?: number): Quote {
+  const availableQuotes = excludeId
+    ? quotes.filter((q) => q.id !== excludeId)
+    : quotes;
+  const randomIndex = Math.floor(Math.random() * availableQuotes.length);
+  return availableQuotes[randomIndex];
+}
 
 export default function Home() {
+  const [currentQuote, setCurrentQuote] = useState<Quote>(() => getRandomQuote());
+  const [favorites, setFavorites, favoritesLoaded] = useLocalStorage<Quote[]>(
+    "quote-vault-favorites",
+    []
+  );
+  const [activeTab, setActiveTab] = useState<Tab>("discover");
+  const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState({ visible: false, message: "" });
+
+  const isFavorite = favorites.some((f) => f.id === currentQuote.id);
+
+  const showToast = useCallback((message: string) => {
+    setToast({ visible: true, message });
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast({ visible: false, message: "" });
+  }, []);
+
+  const handleNewQuote = useCallback(() => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setCurrentQuote(getRandomQuote(currentQuote.id));
+      setIsLoading(false);
+    }, 300);
+  }, [currentQuote.id]);
+
+  const handleToggleFavorite = useCallback(() => {
+    if (isFavorite) {
+      setFavorites((prev) => prev.filter((f) => f.id !== currentQuote.id));
+      showToast("Removed from favorites");
+    } else {
+      setFavorites((prev) => [...prev, currentQuote]);
+      showToast("Added to favorites");
+    }
+  }, [currentQuote, isFavorite, setFavorites, showToast]);
+
+  const handleRemoveFavorite = useCallback(
+    (id: number) => {
+      setFavorites((prev) => prev.filter((f) => f.id !== id));
+      showToast("Removed from favorites");
+    },
+    [setFavorites, showToast]
+  );
+
+  const handleCopy = useCallback(
+    async (quote: Quote = currentQuote) => {
+      const text = `"${quote.text}" — ${quote.author}`;
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("Copied to clipboard");
+      } catch {
+        showToast("Failed to copy");
+      }
+    },
+    [currentQuote, showToast]
+  );
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === " " && activeTab === "discover") {
+        e.preventDefault();
+        handleNewQuote();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeTab, handleNewQuote]);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-background">
+      <div className="max-w-2xl mx-auto px-4 py-8 md:py-16">
+        <header className="text-center mb-12">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <Sparkles className="text-accent-purple" size={32} />
+            <h1 className="text-3xl md:text-4xl font-bold gradient-text">
+              QuoteVault
+            </h1>
+          </div>
+          <p className="text-muted">
+            Discover inspiration, one quote at a time
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+        </header>
+
+        <nav className="flex justify-center gap-2 mb-8 p-1 bg-card-bg rounded-lg border border-card-border">
+          <button
+            onClick={() => setActiveTab("discover")}
+            className={`tab flex items-center gap-2 ${
+              activeTab === "discover" ? "active" : ""
+            }`}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+            <BookMarked size={18} />
+            Discover
+          </button>
+          <button
+            onClick={() => setActiveTab("favorites")}
+            className={`tab flex items-center gap-2 ${
+              activeTab === "favorites" ? "active" : ""
+            }`}
+          >
+            <Heart size={18} />
+            Favorites
+            {favoritesLoaded && favorites.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-xs rounded-full bg-accent-purple text-white">
+                {favorites.length}
+              </span>
+            )}
+          </button>
+        </nav>
+
+        <main>
+          {activeTab === "discover" ? (
+            <QuoteCard
+              quote={currentQuote}
+              isFavorite={isFavorite}
+              onToggleFavorite={handleToggleFavorite}
+              onCopy={() => handleCopy()}
+              onNewQuote={handleNewQuote}
+              isLoading={isLoading}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+          ) : (
+            <FavoritesList
+              favorites={favorites}
+              onRemoveFavorite={handleRemoveFavorite}
+              onCopy={handleCopy}
+            />
+          )}
+        </main>
+
+        <footer className="text-center mt-12 text-muted text-sm">
+          <p>Press spacebar for a new quote</p>
+        </footer>
+      </div>
+
+      <Toast message={toast.message} isVisible={toast.visible} onHide={hideToast} />
     </div>
   );
 }
