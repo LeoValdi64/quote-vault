@@ -13,8 +13,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuoteVault - Inspirational Quotes",
-  description: "Discover and save your favorite inspirational quotes. A beautiful collection of wisdom to inspire your day.",
+  title: "QuoteVault - Daily Inspirational Quotes Collection",
+  description:
+    "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
+  openGraph: {
+    title: "QuoteVault - Daily Inspirational Quotes Collection",
+    description:
+      "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
+    images: ["/og-image.png"],
+    url: "https://quote-vault-phi.vercel.app",
+  },
+  alternates: {
+    canonical: "https://quote-vault-phi.vercel.app",
+  },
 };
 
 export default function RootLayout({
@@ -27,6 +38,20 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebApplication",
+              name: "QuoteVault",
+              description:
+                "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
+              url: "https://quote-vault-phi.vercel.app",
+              applicationCategory: "ReferenceApplication",
+            }),
+          }}
+        />
         {children}
       </body>
     </html>
