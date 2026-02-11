@@ -13,15 +13,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "QuoteVault - Daily Inspirational Quotes Collection",
+  title: "QuoteVault – Discover & Save Inspirational Quotes",
   description:
     "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
   openGraph: {
-    title: "QuoteVault - Daily Inspirational Quotes Collection",
+    type: "website",
+    title: "QuoteVault – Discover & Save Inspirational Quotes",
     description:
       "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
     images: ["/og-image.png"],
     url: "https://quote-vault-phi.vercel.app",
+    siteName: "QuoteVault",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "QuoteVault – Discover & Save Inspirational Quotes",
+    description:
+      "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
   },
   alternates: {
     canonical: "https://quote-vault-phi.vercel.app",
@@ -49,6 +57,13 @@ export default function RootLayout({
                 "Discover, save, and share inspirational quotes from great thinkers. Browse a curated collection of wisdom and build your personal favorites list.",
               url: "https://quote-vault-phi.vercel.app",
               applicationCategory: "ReferenceApplication",
+              operatingSystem: "All",
+              offers: {
+                "@type": "Offer",
+                price: "0",
+                priceCurrency: "USD",
+              },
+              browserRequirements: "Requires JavaScript",
             }),
           }}
         />
